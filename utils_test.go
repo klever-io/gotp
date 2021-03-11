@@ -5,7 +5,7 @@ import (
 )
 
 func TestBuildUri(t *testing.T) {
-	s := BuildUri(
+	s, err := BuildUri(
 		"totp",
 		"4S62BZNFXXSZLCRO",
 		"xlzd",
@@ -15,6 +15,10 @@ func TestBuildUri(t *testing.T) {
 		6,
 		0,
 	)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	if s != "otpauth://totp/SomeOrg:xlzd?secret=4S62BZNFXXSZLCRO&issuer=SomeOrg" {
 		t.Error("BuildUri test failed")
 	}

@@ -16,7 +16,7 @@ func NewDefaultHOTP(secret string) *HOTP {
 }
 
 // Generates the OTP for the given count.
-func (h *HOTP) At(count int) string {
+func (h *HOTP) At(count int) (string, error) {
 	return h.generateOTP(count)
 }
 
@@ -27,8 +27,13 @@ params:
     otp:   the OTP to check against
     count: the OTP HMAC counter
 */
-func (h *HOTP) Verify(otp string, count int) bool {
-	return otp == h.At(count)
+func (h *HOTP) Verify(otp string, count int) (bool, error) {
+	at, err := h.At(count)
+	if err != nil {
+		return false, err
+	}
+
+	return otp == at, nil
 }
 
 /*
@@ -45,7 +50,7 @@ params:
 
 returns: provisioning URI
 */
-func (h *HOTP) ProvisioningUri(accountName, issuerName string, initialCount int) string {
+func (h *HOTP) ProvisioningUri(accountName, issuerName string, initialCount int) (string, error) {
 	return BuildUri(
 		OtpTypeHotp,
 		h.secret,

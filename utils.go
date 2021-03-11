@@ -32,9 +32,9 @@ params:
 
 returns: provisioning uri
 */
-func BuildUri(otpType, secret, accountName, issuerName, algorithm string, initialCount, digits, period int) string {
+func BuildUri(otpType, secret, accountName, issuerName, algorithm string, initialCount, digits, period int) (string, error) {
 	if otpType != OtpTypeHotp && otpType != OtpTypeTotp {
-		panic("otp type error, got " + otpType)
+		return "", fmt.Errorf("otp type error, got " + otpType)
 	}
 
 	urlParams := make([]string, 0)
@@ -57,7 +57,7 @@ func BuildUri(otpType, secret, accountName, issuerName, algorithm string, initia
 	if period != 0 && period != 30 {
 		urlParams = append(urlParams, fmt.Sprintf("period=%d", period))
 	}
-	return fmt.Sprintf("otpauth://%s/%s?%s", otpType, label, strings.Join(urlParams, "&"))
+	return fmt.Sprintf("otpauth://%s/%s?%s", otpType, label, strings.Join(urlParams, "&")), nil
 }
 
 // get current timestamp

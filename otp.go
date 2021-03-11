@@ -39,11 +39,17 @@ func NewOTP(secret string, digits int, hasher *Hasher) OTP {
 params
     input: the HMAC counter value to use as the OTP input. Usually either the counter, or the computed integer based on the Unix timestamp
 */
-func (o *OTP) generateOTP(input int) string {
+func (o *OTP) generateOTP(input int) (string, error) {
 	if input < 0 {
-		panic("input must be positive integer")
+		return "", fmt.Errorf("input must be positive integer")
 	}
-	hasher := hmac.New(o.hasher.Digest, o.byteSecret())
+
+	byteSecrets, err := o.byteSecret()
+	if err != nil {
+		return "", err
+	}
+
+	hasher := hmac.New(o.hasher.Digest, byteSecrets)
 	hasher.Write(Itob(input))
 	hmacHash := hasher.Sum(nil)
 
@@ -54,17 +60,17 @@ func (o *OTP) generateOTP(input int) string {
 		(int(hmacHash[offset+3]) & 0xff)
 
 	code = code % int(math.Pow10(o.digits))
-	return fmt.Sprintf(fmt.Sprintf("%%0%dd", o.digits), code)
+	return fmt.Sprintf(fmt.Sprintf("%%0%dd", o.digits), code), nil
 }
 
-func (o *OTP) byteSecret() []byte {
+func (o *OTP) byteSecret() ([]byte, error) {
 	missingPadding := len(o.secret) % 8
 	if missingPadding != 0 {
 		o.secret = o.secret + strings.Repeat("=", 8-missingPadding)
 	}
 	bytes, err := base32.StdEncoding.DecodeString(o.secret)
 	if err != nil {
-		panic("decode secret failed")
+		return nil, err
 	}
-	return bytes
+	return bytes, nil
 }
